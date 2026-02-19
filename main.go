@@ -9,11 +9,13 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 var MULTI = true
 
 func main() {
+	start := time.Now()
 	if MULTI {
 		cores := runtime.NumCPU()
 		BARRIER = NewBarrier(cores)
@@ -30,6 +32,8 @@ func main() {
 		BARRIER = NewBarrier(1)
 		actual_main(0, 1, os.Args)
 	}
+	elapsed := time.Since(start)
+	fmt.Println("Elapsed:", elapsed)
 }
 
 func randRange(min, max int) int {
@@ -58,6 +62,9 @@ func NewBarrier(numCores int) *Barrier {
 }
 
 func (b *Barrier) Wait() {
+	if b.numCores == 1 {
+		return
+	}
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 	id := b.barrierId
